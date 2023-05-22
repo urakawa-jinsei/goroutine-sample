@@ -2,20 +2,21 @@ package main
 
 import (
 	"fmt"
+	"sync"
 )
 
-func server(ch chan string) {
-	defer close(ch)
-	ch <- "one"
-	ch <- "two"
-	ch <- "three"
+func doSomething(wg *sync.WaitGroup, id int) {
+	defer wg.Done()
+	for i := 0; i < 10000; i++ {
+		fmt.Printf("%d¥n", id)
+	}
 }
 
 func main() {
-	ch := make(chan string)
-	go server(ch)
-
-	for s := range ch {
-		fmt.Println(s)
+	var wg sync.WaitGroup
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go doSomething(&wg, i)
 	}
+	wg.Wait() // これがないとdoSomethingの処理が先に終わってしまう
 }
